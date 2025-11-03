@@ -1,0 +1,53 @@
+{
+	"flutter": {
+		"platforms": {
+			"android": {
+				"default": {
+					"projectId": "romeo-energy-community",
+					"appId": "1:797053733001:android:24e22f9e3471502583de58",
+					"fileOutput": "android/app/google-services.json"
+				}
+			},
+			"dart": {
+				"lib/firebase_options.dart": {
+					"projectId": "romeo-energy-community",
+					"configurations": {
+						"android": "1:797053733001:android:24e22f9e3471502583de58",
+						"ios": "1:797053733001:ios:191e7956f92b5b2883de58",
+						"macos": "1:797053733001:ios:191e7956f92b5b2883de58",
+						"web": "1:797053733001:web:6fc51fd30c0fc8c783de58",
+						"windows": "1:797053733001:web:ba8c832aa351c8ba83de58"
+					}
+				}
+			}
+		}
+	},
+	"functions": {
+		"source": "functions"
+	},
+	"hosting": {
+		"public": "build/web",
+		"ignore": [
+			"firebase.json",
+			"**/.*",
+			"**/node_modules/**"
+		],
+		"headers": [
+			{
+				"source": "**/*.@(js|css)",
+				"headers": [
+					{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+				]
+			},
+			{
+				"source": "**/*.@(png|jpg|jpeg|gif|webp|svg)",
+				"headers": [
+					{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+				]
+			}
+		],
+			"rewrites": [
+				{ "source": "**", "destination": "/index.html" }
+			]
+	}
+}

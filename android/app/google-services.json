@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "797053733001",
+    "project_id": "romeo-energy-community",
+    "storage_bucket": "romeo-energy-community.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:797053733001:android:24e22f9e3471502583de58",
+        "android_client_info": {
+          "package_name": "com.example.flutter_application_romeo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBebwZTUglV-jXENv6kykg1TFTh0ltkUjQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
