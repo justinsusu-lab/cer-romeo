@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 
 class FAQPage extends StatefulWidget {
-  const FAQPage({Key? key}) : super(key: key);
+  const FAQPage({super.key});
   @override
   State<FAQPage> createState() => _FAQPageState();
 }
@@ -515,11 +515,11 @@ class FaqTile extends StatefulWidget {
   final List<Widget> body;
   final ValueListenable<bool?>? controller;
   const FaqTile({
-    Key? key,
+    super.key,
     required this.title,
     required this.body,
     this.controller,
-  }) : super(key: key);
+  });
 
   @override
   State<FaqTile> createState() => _FaqTileState();
@@ -613,7 +613,7 @@ class _FaqTileState extends State<FaqTile> {
 
 class _Bullet extends StatelessWidget {
   final String text;
-  const _Bullet({Key? key, required this.text}) : super(key: key);
+  const _Bullet({super.key, required this.text});
   @override
   Widget build(BuildContext context) {
     return Padding(

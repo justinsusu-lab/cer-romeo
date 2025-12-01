@@ -13,7 +13,7 @@ class SinusWavesCard extends StatefulWidget {
   final double pricePerKwh; // €/kWh
 
   const SinusWavesCard({
-    Key? key,
+    super.key,
     required this.red,
     required this.green,
     required this.yellow,
@@ -23,7 +23,7 @@ class SinusWavesCard extends StatefulWidget {
     this.bottomTicks = 6,
     this.showHeaderTitle = true,
     this.pricePerKwh = 0.20,
-  }) : super(key: key);
+  });
 
   @override
   State<SinusWavesCard> createState() => _SinusWavesCardState();
@@ -318,7 +318,7 @@ class _SinusPainter extends CustomPainter {
     final grid = Paint()
       ..color = Colors.black12
       ..strokeWidth = 1;
-    final tpBuilder = (String s) {
+    TextPainter tpBuilder(String s) {
       final tp = TextPainter(
         text: TextSpan(
           text: s,
@@ -328,7 +328,7 @@ class _SinusPainter extends CustomPainter {
       );
       tp.layout();
       return tp;
-    };
+    }
     for (final y in ySteps) {
       final py = origin.dy - (y / yMax) * chartH;
       canvas.drawLine(

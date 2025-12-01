@@ -14,7 +14,7 @@ class StackedTowerToggle extends StatefulWidget {
   final double pricePerKwh; // €/kWh
 
   const StackedTowerToggle({
-    Key? key,
+    super.key,
     required this.red,
     required this.green,
     required this.yellow,
@@ -24,7 +24,7 @@ class StackedTowerToggle extends StatefulWidget {
     this.onPrevMonth,
     this.onNextMonth,
     this.pricePerKwh = 0.20,
-  }) : super(key: key);
+  });
 
   @override
   State<StackedTowerToggle> createState() => _StackedTowerToggleState();

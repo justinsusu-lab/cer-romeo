@@ -1,7 +1,7 @@
-// lib/ui/screens/home_page.dart
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../widgets/sinus_waves_card.dart';
 import '../widgets/stacked_tower_toggle.dart';
@@ -21,7 +21,7 @@ class Membro {
 }
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
   @override
   State<HomePage> createState() => _HomePageState();
 }
@@ -36,7 +36,6 @@ class _HomePageState extends State<HomePage>
   late final AnimationController _blinkController;
   late final Animation<double> _blinkAnimation;
 
-  // Progress animations
   late final AnimationController _prodAutoconsController;
   late final Animation<double> _prodAutoconsAnim;
   late final AnimationController _prodImessaController;
@@ -69,7 +68,8 @@ class _HomePageState extends State<HomePage>
   String _two(int n) => n.toString().padLeft(2, '0');
   String _formatNow() {
     final now = DateTime.now();
-    return '${_two(now.day)}/${_two(now.month)}/${now.year} ${_two(now.hour)}:${_two(now.minute)}';
+    return '${_two(now.day)}/${_two(now.month)}/${now.year} '
+        '${_two(now.hour)}:${_two(now.minute)}';
   }
 
   // Data per onde sinusoidali
@@ -282,10 +282,11 @@ class _HomePageState extends State<HomePage>
     final filtered = _searchText.isEmpty
         ? _membri.take(4).toList()
         : _membri
-              .where(
-                (m) => m.nome.toLowerCase().contains(_searchText.toLowerCase()),
-              )
-              .toList();
+            .where(
+              (m) =>
+                  m.nome.toLowerCase().contains(_searchText.toLowerCase()),
+            )
+            .toList();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FA),
@@ -547,84 +548,6 @@ class _HomePageState extends State<HomePage>
                         elevation: 2,
                         child: Padding(
                           padding: const EdgeInsets.all(12.0),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 34,
-                                height: 68,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade200,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 6,
-                                ),
-                                child: Column(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceAround,
-                                  children: [
-                                    FadeTransition(
-                                      opacity: _blinkAnimation,
-                                      child: Container(
-                                        width: 18,
-                                        height: 18,
-                                        decoration: BoxDecoration(
-                                          color: Colors.red,
-                                          shape: BoxShape.circle,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.red.withOpacity(
-                                                0.6,
-                                              ),
-                                              blurRadius: 4,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    Container(
-                                      width: 18,
-                                      height: 18,
-                                      decoration: const BoxDecoration(
-                                        color: Color(0xFFC9C9C9),
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                    Container(
-                                      width: 18,
-                                      height: 18,
-                                      decoration: const BoxDecoration(
-                                        color: Color(0xFFC2C1C1),
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              const Expanded(
-                                child: Center(
-                                  child: Text(
-                                    'Stato: Problema',
-                                    style: TextStyle(
-                                      color: Colors.red,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      width: 320,
-                      height: 110,
-                      child: Card(
-                        elevation: 2,
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -709,298 +632,507 @@ class _HomePageState extends State<HomePage>
             ),
 
             // Energia prodotta / consumata
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12.0),
-              child: Center(
-                child: Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: [
-                    SizedBox(
-                      width: 480,
-                      child: Card(
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+// === INIZIO MODIFICA ESP32 ===
+// === INIZIO MODIFICA ESP32 ===
+StreamBuilder<DatabaseEvent>(
+  stream: FirebaseDatabase.instance.ref('cer_data/current').onValue,
+  builder: (context, snapshot) {
+    // Dati di default
+    double produzione = 3.336;
+    double consumo = 7.527;
+    double immissione = 2.166;
+    double autocons = 1.169;
+
+    // Stato / errori
+    String stato = 'error';           // "ok" | "error" | "assistenza"
+    String erroreCodice = 'NONE';
+    String erroreDescrizione = 'Nessun problema rilevato';
+
+    // Leggi dati ESP32
+    if (snapshot.hasData && snapshot.data?.snapshot.value != null) {
+      try {
+        final data = snapshot.data!.snapshot.value as Map<dynamic, dynamic>;
+        produzione = ((data['produzione'] ?? 3.336) as num).toDouble();
+        consumo    = ((data['consumo'] ?? 7.527) as num).toDouble();
+        immissione = ((data['immissione'] ?? 2.166) as num).toDouble();
+        autocons   = produzione < consumo
+            ? produzione
+            : (consumo > 0 ? consumo : 1.169);
+
+        stato = (data['stato'] ?? 'error') as String;
+        erroreCodice =
+            (data['errore_codice'] ?? 'NONE') as String;
+        erroreDescrizione =
+            (data['errore_descrizione'] ?? 'Nessun problema rilevato') as String;
+      } catch (_) {}
+    }
+
+    // Percentuali barre
+    final double prodAutoconsPerc =
+        produzione > 0 ? autocons / produzione : 0.3505;
+    final double prodImessaPerc =
+        produzione > 0 ? immissione / produzione : 0.6495;
+    final double consAutoconsPerc =
+        consumo > 0 ? autocons / consumo : 0.1553;
+    final double prelevata = consumo - autocons;
+    final double consPrelevPerc =
+        consumo > 0 ? prelevata / consumo : 0.8447;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // SEMAFORO LARGO SOPRA
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Center(
+            child: SizedBox(
+              width: 900,        // allargato
+              height: 110,
+              child: Card(
+                elevation: 2,
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Row(
+                    children: [
+                      // Colonna con i 3 LED
+                      Container(
+                        width: 34,
+                        height: 68,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Row(
-                            children: [
-                              SizedBox(
-                                width: 56,
-                                height: 56,
-                                child: Image.asset(
-                                  'assets/images/logo_pv.png',
-                                  fit: BoxFit.contain,
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            // LED ROSSO: solo error
+                            if (stato == 'error')
+                              FadeTransition(
+                                opacity: _blinkAnimation,
+                                child: Container(
+                                  width: 18,
+                                  height: 18,
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.red.withOpacity(0.6),
+                                        blurRadius: 4,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              )
+                            else
+                              Container(
+                                width: 18,
+                                height: 18,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFC9C9C9),
+                                  shape: BoxShape.circle,
                                 ),
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'Energia prodotta',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    const Text(
-                                      '3,336.18 kWh',
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.green,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    const Text(
-                                      'Energia autoconsumata',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.black54,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: AnimatedBuilder(
-                                            animation: _prodAutoconsAnim,
-                                            builder: (_, __) =>
-                                                LinearProgressIndicator(
-                                                  value:
-                                                      _prodAutoconsAnim.value *
-                                                      0.3505,
-                                                  minHeight: 8,
-                                                  backgroundColor:
-                                                      Colors.grey.shade200,
-                                                  color: Colors.green,
-                                                ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.end,
-                                          children: const [
-                                            Text(
-                                              '1,169.22 kWh',
-                                              style: TextStyle(fontSize: 12),
-                                            ),
-                                            Text(
-                                              '35.05%',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.black54,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 10),
-                                    const Text(
-                                      'Energia immessa in rete',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.black54,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: AnimatedBuilder(
-                                            animation: _prodImessaAnim,
-                                            builder: (_, __) =>
-                                                LinearProgressIndicator(
-                                                  value:
-                                                      _prodImessaAnim.value *
-                                                      0.6495,
-                                                  minHeight: 8,
-                                                  backgroundColor:
-                                                      Colors.grey.shade200,
-                                                  color: Colors.blue,
-                                                ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.end,
-                                          children: const [
-                                            Text(
-                                              '2,166.97 kWh',
-                                              style: TextStyle(fontSize: 12),
-                                            ),
-                                            Text(
-                                              '64.95%',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.black54,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ],
+
+                            // LED ARANCIONE: solo assistenza
+                            Container(
+                              width: 18,
+                              height: 18,
+                              decoration: BoxDecoration(
+                                color: stato == 'assistenza'
+                                    ? Colors.orange
+                                    : const Color(0xFFC9C9C9),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+
+                            // LED VERDE: solo ok
+                            Container(
+                              width: 18,
+                              height: 18,
+                              decoration: BoxDecoration(
+                                color: stato == 'ok'
+                                    ? Colors.green
+                                    : const Color(0xFFC2C1C1),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(width: 16),
+
+                      // Testo stato + descrizione
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              stato == 'ok'
+                                  ? 'Stato: OK'
+                                  : (stato == 'assistenza'
+                                      ? 'Stato: Richiesta assistenza'
+                                      : 'Stato: Problema'),
+                              style: TextStyle(
+                                color: stato == 'ok'
+                                    ? Colors.green
+                                    : (stato == 'assistenza'
+                                        ? Colors.orange
+                                        : Colors.red),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              stato == 'assistenza'
+                                  ? 'Richiesta assistenza dal cliente'
+                                  : erroreDescrizione,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: stato == 'ok'
+                                    ? Colors.green
+                                    : Colors.black87,
+                              ),
+                            ),
+                            if (stato != 'assistenza' &&
+                                erroreCodice != 'NONE') ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                'Codice: $erroreCodice',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: stato == 'ok'
+                                      ? Colors.green
+                                      : Colors.black54,
                                 ),
                               ),
                             ],
-                          ),
+                          ],
                         ),
                       ),
-                    ),
-                    SizedBox(
-                      width: 480,
-                      child: Card(
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Row(
-                            children: [
-                              SizedBox(
-                                width: 80,
-                                height: 80,
-                                child: Image.asset(
-                                  'assets/images/bulb_logo.png',
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'Energia consumata',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    const Text(
-                                      '7,527.74 kWh',
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.red,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    const Text(
-                                      'Energia autoconsumata',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.black54,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: AnimatedBuilder(
-                                            animation: _consAutoconsAnim,
-                                            builder: (_, __) =>
-                                                LinearProgressIndicator(
-                                                  value:
-                                                      _consAutoconsAnim.value *
-                                                      0.1553,
-                                                  minHeight: 8,
-                                                  backgroundColor:
-                                                      Colors.grey.shade200,
-                                                  color: Colors.orange,
-                                                ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.end,
-                                          children: const [
-                                            Text(
-                                              '1,169.22 kWh',
-                                              style: TextStyle(fontSize: 12),
-                                            ),
-                                            Text(
-                                              '15.53%',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.black54,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 10),
-                                    const Text(
-                                      'Energia prelevata',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.black54,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: AnimatedBuilder(
-                                            animation: _consPrelevAnim,
-                                            builder: (_, __) =>
-                                                LinearProgressIndicator(
-                                                  value:
-                                                      _consPrelevAnim.value *
-                                                      0.8447,
-                                                  minHeight: 8,
-                                                  backgroundColor:
-                                                      Colors.grey.shade200,
-                                                  color: Colors.deepOrange,
-                                                ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.end,
-                                          children: const [
-                                            Text(
-                                              '6,356.52 kWh',
-                                              style: TextStyle(fontSize: 12),
-                                            ),
-                                            Text(
-                                              '84.47%',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.black54,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
+          ),
+        ),
+
+        // CARD ENERGIA PRODOTTA + CONSUMATA
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12.0),
+          child: Center(
+            child: Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                // Energia prodotta
+                SizedBox(
+                  width: 480,
+                  child: Card(
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 56,
+                            height: 56,
+                            child: Image.asset(
+                              'assets/images/logo_pv.png',
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Energia prodotta',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  '${produzione.toStringAsFixed(2)} kW',
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                const Text(
+                                  'Energia autoconsumata',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: AnimatedBuilder(
+                                        animation: _prodAutoconsAnim,
+                                        builder: (_, __) =>
+                                            LinearProgressIndicator(
+                                              value: (_prodAutoconsAnim.value *
+                                                      prodAutoconsPerc)
+                                                  .clamp(0.0, 1.0),
+                                              minHeight: 8,
+                                              backgroundColor:
+                                                  Colors.grey.shade200,
+                                              color: Colors.green,
+                                            ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          '${autocons.toStringAsFixed(2)} kW',
+                                          style:
+                                              const TextStyle(fontSize: 12),
+                                        ),
+                                        Text(
+                                          '${(prodAutoconsPerc * 100).toStringAsFixed(2)}%',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.black54,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+                                const Text(
+                                  'Energia immessa in rete',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: AnimatedBuilder(
+                                        animation: _prodImessaAnim,
+                                        builder: (_, __) =>
+                                            LinearProgressIndicator(
+                                              value: (_prodImessaAnim.value *
+                                                      prodImessaPerc)
+                                                  .clamp(0.0, 1.0),
+                                              minHeight: 8,
+                                              backgroundColor:
+                                                  Colors.grey.shade200,
+                                              color: Colors.blue,
+                                            ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          '${immissione.toStringAsFixed(2)} kW',
+                                          style:
+                                              const TextStyle(fontSize: 12),
+                                        ),
+                                        Text(
+                                          '${(prodImessaPerc * 100).toStringAsFixed(2)}%',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.black54,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Energia consumata
+                SizedBox(
+                  width: 480,
+                  child: Card(
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 80,
+                            height: 80,
+                            child: Image.asset(
+                              'assets/images/bulb_logo.png',
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Energia consumata',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  '${consumo.toStringAsFixed(2)} kW',
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.red,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                const Text(
+                                  'Energia autoconsumata',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: AnimatedBuilder(
+                                        animation: _consAutoconsAnim,
+                                        builder: (_, __) =>
+                                            LinearProgressIndicator(
+                                              value:
+                                                  (_consAutoconsAnim.value *
+                                                          consAutoconsPerc)
+                                                      .clamp(0.0, 1.0),
+                                              minHeight: 8,
+                                              backgroundColor:
+                                                  Colors.grey.shade200,
+                                              color: Colors.orange,
+                                            ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          '${autocons.toStringAsFixed(2)} kW',
+                                          style:
+                                              const TextStyle(fontSize: 12),
+                                        ),
+                                        Text(
+                                          '${(consAutoconsPerc * 100).toStringAsFixed(2)}%',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.black54,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+                                const Text(
+                                  'Energia prelevata',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: AnimatedBuilder(
+                                        animation: _consPrelevAnim,
+                                        builder: (_, __) =>
+                                            LinearProgressIndicator(
+                                              value:
+                                                  (_consPrelevAnim.value *
+                                                          consPrelevPerc)
+                                                      .clamp(0.0, 1.0),
+                                              minHeight: 8,
+                                              backgroundColor:
+                                                  Colors.grey.shade200,
+                                              color: Colors.redAccent,
+                                            ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          '${prelevata.toStringAsFixed(2)} kW',
+                                          style:
+                                              const TextStyle(fontSize: 12),
+                                        ),
+                                        Text(
+                                          '${(consPrelevPerc * 100).toStringAsFixed(2)}%',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.black54,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  },
+),
+// === FINE MODIFICA ESP32 ===
+
+// FINE MODIFICA ESP-32
 
             // Post-it KPI
             Padding(
@@ -1495,12 +1627,12 @@ class _PostIt extends StatelessWidget {
   final double deltaPercent;
   final Color color;
   const _PostIt({
-    Key? key,
+    super.key,
     required this.title,
     required this.amount,
     required this.deltaPercent,
     required this.color,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1589,11 +1721,11 @@ class _HourForecast extends StatelessWidget {
   final int temp;
   final String label;
   const _HourForecast({
-    Key? key,
+    super.key,
     required this.icon,
     required this.temp,
     required this.label,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

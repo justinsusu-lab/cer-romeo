@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'email_verification_page.dart';
 
 class RegistrationPage extends StatefulWidget {
-  const RegistrationPage({Key? key}) : super(key: key);
+  const RegistrationPage({super.key});
 
   @override
   State<RegistrationPage> createState() => _RegistrationPageState();

@@ -1,37 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'ui/screens/login_page.dart';
 import 'firebase_options.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Gestione errori
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
     if (kDebugMode) {
       print('FlutterError: ${details.exceptionAsString()}');
     }
   };
-
-  // URL strategy per routing
   if (kIsWeb) {
     usePathUrlStrategy();
   }
-
-  // Inizializza Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  FirebaseDatabase.instance.databaseURL = 
+    'https://romeo-energy-community-default-rtdb.europe-west1.firebasedatabase.app';
 
   runApp(const RomeoEnergyCommunityApp());
 }
 
 class RomeoEnergyCommunityApp extends StatelessWidget {
-  const RomeoEnergyCommunityApp({Key? key}) : super(key: key);
+  const RomeoEnergyCommunityApp({super.key});
 
   @override
   Widget build(BuildContext context) {

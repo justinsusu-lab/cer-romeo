@@ -10,14 +10,14 @@ class RevenuesWavesCard extends StatefulWidget {
   final double? yMax; // optional max in € (will be rounded to 100)
 
   const RevenuesWavesCard({
-    Key? key,
+    super.key,
     required this.incentives,
     required this.savings,
     required this.revenues,
     this.title = 'Ricavi',
     this.bottomTicks = 6,
     this.yMax,
-  }) : super(key: key);
+  });
 
   @override
   State<RevenuesWavesCard> createState() => _RevenuesWavesCardState();
@@ -106,9 +106,15 @@ class _RevenuesWavesCardState extends State<RevenuesWavesCard>
 
   double _autoMax() {
     double m = 0.0;
-    for (final v in _inc) m = max(m, v);
-    for (final v in _sav) m = max(m, v);
-    for (final v in _rev) m = max(m, v);
+    for (final v in _inc) {
+      m = max(m, v);
+    }
+    for (final v in _sav) {
+      m = max(m, v);
+    }
+    for (final v in _rev) {
+      m = max(m, v);
+    }
     return max(100.0, m * 1.2);
   }
 
@@ -310,7 +316,7 @@ class _RevenuesPainter extends CustomPainter {
     }
 
     // series drawing order
-    if (showInc)
+    if (showInc) {
       drawSeries(
         canvas,
         incentives,
@@ -320,10 +326,13 @@ class _RevenuesPainter extends CustomPainter {
         chartH,
         origin,
       );
-    if (showSav)
+    }
+    if (showSav) {
       drawSeries(canvas, savings, Colors.blue, false, chartW, chartH, origin);
-    if (showRev)
+    }
+    if (showRev) {
       drawSeries(canvas, revenues, Colors.amber, true, chartW, chartH, origin);
+    }
 
     if (hoverX != null) {
       final x = hoverX!.clamp(marginLeft, marginLeft + chartW);
@@ -420,7 +429,7 @@ class _RevenuesTooltip extends StatelessWidget {
   final double hoverX;
   final bool showInc, showSav, showRev;
   const _RevenuesTooltip({
-    Key? key,
+    super.key,
     required this.incentives,
     required this.savings,
     required this.revenues,
@@ -428,7 +437,7 @@ class _RevenuesTooltip extends StatelessWidget {
     required this.showInc,
     required this.showSav,
     required this.showRev,
-  }) : super(key: key);
+  });
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(

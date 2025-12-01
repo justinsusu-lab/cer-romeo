@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 class NewPasswordPage extends StatefulWidget {
   final String email;
 
-  const NewPasswordPage({Key? key, required this.email}) : super(key: key);
+  const NewPasswordPage({super.key, required this.email});
 
   @override
   State<NewPasswordPage> createState() => _NewPasswordPageState();

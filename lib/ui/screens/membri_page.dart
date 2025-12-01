@@ -2,7 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 class MembriPage extends StatefulWidget {
-  const MembriPage({Key? key}) : super(key: key);
+  const MembriPage({super.key});
 
   @override
   State<MembriPage> createState() => _MembriPageState();
@@ -99,25 +99,25 @@ class _MembriPageState extends State<MembriPage> {
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
-                      value: ruolo,
+                      initialValue: ruolo,
                       isExpanded: true,
                       decoration: const InputDecoration(
                         labelText: "Ruolo",
                         border: OutlineInputBorder(),
                       ),
                       items: const [
-                        DropdownMenuItem(child: Text("Admin"), value: "Admin"),
+                        DropdownMenuItem(value: "Admin", child: Text("Admin")),
                         DropdownMenuItem(
-                          child: Text("Prosumer"),
                           value: "Prosumer",
+                          child: Text("Prosumer"),
                         ),
                         DropdownMenuItem(
-                          child: Text("Consumer"),
                           value: "Consumer",
+                          child: Text("Consumer"),
                         ),
                         DropdownMenuItem(
-                          child: Text("Gruppo Obiettivo"),
                           value: "Gruppo Obiettivo",
+                          child: Text("Gruppo Obiettivo"),
                         ),
                       ],
                       onChanged: (v) {
@@ -129,7 +129,7 @@ class _MembriPageState extends State<MembriPage> {
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
-                      value: stato,
+                      initialValue: stato,
                       isExpanded: true,
                       decoration: const InputDecoration(
                         labelText: "Stato",
@@ -137,12 +137,12 @@ class _MembriPageState extends State<MembriPage> {
                       ),
                       items: const [
                         DropdownMenuItem(
-                          child: Text("Attivo"),
                           value: "Attivo",
+                          child: Text("Attivo"),
                         ),
                         DropdownMenuItem(
-                          child: Text("Inattivo"),
                           value: "Inattivo",
+                          child: Text("Inattivo"),
                         ),
                       ],
                       onChanged: (v) {
@@ -265,8 +265,8 @@ class _MembriPageState extends State<MembriPage> {
       floatingActionButton: FloatingActionButton(
         onPressed: _apriDialogAggiungiMembro,
         backgroundColor: Colors.green,
-        child: const Icon(Icons.add, size: 30),
         tooltip: 'Aggiungi membro',
+        child: const Icon(Icons.add, size: 30),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),

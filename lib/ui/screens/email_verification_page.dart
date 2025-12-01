@@ -7,10 +7,10 @@ class EmailVerificationPage extends StatefulWidget {
   final bool isPasswordRecovery;
 
   const EmailVerificationPage({
-    Key? key,
+    super.key,
     required this.email,
     this.isPasswordRecovery = false,
-  }) : super(key: key);
+  });
 
   @override
   State<EmailVerificationPage> createState() => _EmailVerificationPageState();

@@ -18,10 +18,10 @@ class WeeklyWeatherCard extends StatefulWidget {
   final List<HourlyPoint> data; // 7*24 ore
   final String title;
   const WeeklyWeatherCard({
-    Key? key,
+    super.key,
     required this.data,
     this.title = 'Meteo settimanale (orari)',
-  }) : super(key: key);
+  });
   @override
   State<WeeklyWeatherCard> createState() => _WeeklyWeatherCardState();
 }

@@ -11,11 +11,11 @@ class WeatherIFrameView extends StatefulWidget {
   final double? width;
   final double? height;
   const WeatherIFrameView({
-    Key? key,
+    super.key,
     required this.url,
     this.width,
     this.height,
-  }) : super(key: key);
+  });
 
   @override
   State<WeatherIFrameView> createState() => _WeatherIFrameViewState();

@@ -16,6 +16,7 @@ dependencies:
   firebase_core: ^3.15.2
   firebase_auth: ^5.2.0
   firebase_auth_web: ^5.11.0
+  firebase_database: ^11.1.4  # ← AGGIUNTO per Realtime Database
 
   # Web interop
   js: ^0.7.1

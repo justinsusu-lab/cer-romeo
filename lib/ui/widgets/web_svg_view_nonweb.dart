@@ -5,8 +5,7 @@ class WebSvgView extends StatelessWidget {
   final String assetPath;
   final double? width;
   final double? height;
-  const WebSvgView({Key? key, required this.assetPath, this.width, this.height})
-    : super(key: key);
+  const WebSvgView({super.key, required this.assetPath, this.width, this.height});
 
   @override
   Widget build(BuildContext context) {

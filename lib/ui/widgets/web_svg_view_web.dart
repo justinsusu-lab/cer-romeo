@@ -11,8 +11,7 @@ class WebSvgView extends StatefulWidget {
   final String assetPath;
   final double? width;
   final double? height;
-  const WebSvgView({Key? key, required this.assetPath, this.width, this.height})
-    : super(key: key);
+  const WebSvgView({super.key, required this.assetPath, this.width, this.height});
 
   @override
   State<WebSvgView> createState() => _WebSvgViewState();
